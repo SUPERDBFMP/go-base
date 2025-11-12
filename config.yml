@@ -1,7 +1,7 @@
 nacos:
   server-addr: 192.168.3.2:8848
-  user-name: nacos
-  password: nacos
+  user-name: base
+  password: base
   namespace: base
 logger:
   level: 5

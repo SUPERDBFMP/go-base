@@ -60,10 +60,20 @@ type MySqlConfig struct {
 	MaxLife  int    `yaml:"max-life"` //连接生命周期，单位为分钟
 }
 
+// RedisConfig Redis配置结构体
+type RedisConfig struct {
+	ServerAddress string `yaml:"server-address"` // Redis服务器地址
+	Password      string `yaml:"password"`       // Redis密码
+	DB            int    `yaml:"db"`             // Redis数据库
+	PoolSize      int    `yaml:"pool-size"`      // Redis连接池大小
+	MinIdleCones  int    `yaml:"min-idle-cones"` // Redis最小空闲连接数
+}
+
 type GlobalConfig struct {
 	NaCos  *NaCosConfig  `yaml:"nacos"`
 	Logger *LoggerConfig `yaml:"logger"`
 	MySQL  *MySqlConfig  `yaml:"mySql"`
+	Redis  *RedisConfig  `yaml:"redis"`
 }
 
 type Option func(*GlobalConfig)
@@ -81,6 +91,12 @@ func WithLoggerConfig(logger *LoggerConfig) Option {
 func WithMySqlConfig(mysql *MySqlConfig) Option {
 	return func(config *GlobalConfig) {
 		config.MySQL = mysql
+	}
+}
+
+func WithRedisConfig(redis *RedisConfig) Option {
+	return func(config *GlobalConfig) {
+		config.Redis = redis
 	}
 }
 
@@ -107,6 +123,7 @@ func InitConfig(localConfigPath string) {
 	}
 	loadLoggerConfig()
 	loadMysqlConfig()
+	loadRedisConfig()
 }
 
 // 初始化NaCos
@@ -197,4 +214,22 @@ func loadMysqlConfig() {
 		panic(fmt.Sprintf("Parse yaml config[%s] from Nacos err: %v", content, err))
 	}
 	WithMySqlConfig(&config)
+}
+
+// 加载Redis配置
+func loadRedisConfig() {
+	content, err := NaCosClient.GetConfig(vo.ConfigParam{DataId: RedisDataId, Group: DefaultGroup})
+	if err != nil {
+		panic(fmt.Sprintf("Fetch config from Nacos with data id[%s]err:%s", RedisDataId, err))
+	}
+	if content == "" {
+		//logrus.Warnf("Fetch config from Nacos with data id[%s] is blank", MySqlDataId)
+		return
+	}
+
+	var config RedisConfig
+	if err = yaml.Unmarshal([]byte(content), &config); err != nil {
+		panic(fmt.Sprintf("Parse yaml config[%s] from Nacos err: %v", content, err))
+	}
+	WithRedisConfig(&config)
 }
