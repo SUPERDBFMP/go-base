@@ -1,0 +1,22 @@
+nacos:
+  server-addr: 192.168.3.2:8848
+  user-name: nacos
+  password: nacos
+  namespace: base
+logger:
+  level: 5
+  filename: base.log
+  max-size: 50
+  max-age: 10
+  max-backups: 20
+  compress: true
+mysql:
+  host: 192.168.3.2
+  port: 3306
+  user-name: root
+  password: root
+  db-name: base
+  max-idle: 10
+  max-conn: 20
+  max-life: 120
+
