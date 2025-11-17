@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"go-base/config"
 	"go-base/glog"
+	"go-base/listener"
 	"time"
 
 	"github.com/google/uuid"
@@ -22,6 +23,11 @@ type Client struct {
 var originRedisClient *redis.Client
 
 var maxRetryCount = 3
+
+func init() {
+	listener.AddTypedApplicationListener(&AppConfigLoadedEventListener{})
+	listener.AddTypedApplicationListener(&AppShutDownEventListener{})
+}
 
 // InitRedis 创建新的Redis客户端
 func InitRedis() {
@@ -67,6 +73,28 @@ func InitRedis() {
 
 	originRedisClient = client
 	glog.Infof(ctx, "Redis connected successfully.")
+}
+
+type AppConfigLoadedEventListener struct{}
+
+func (ace *AppConfigLoadedEventListener) OnApplicationEvent(ctx context.Context, event *listener.AppConfigLoadedEvent) {
+	glog.Infof(ctx, "AppConfigLoadedEvent: %v", event.Time)
+	if config.GlobalConf.Redis != nil {
+		InitRedis()
+	}
+}
+
+type AppShutDownEventListener struct{}
+
+func (l *AppShutDownEventListener) OnApplicationEvent(ctx context.Context, event *listener.AppShutdownEvent) {
+	// 关闭Redis连接
+	if config.GlobalConf.Redis != nil {
+		redisClient := GetRedis(ctx)
+		if redisClient != nil {
+			redisClient.Close()
+			glog.Info(ctx, "Redis连接已关闭")
+		}
+	}
 }
 
 // GetRedis 获取Redis客户端

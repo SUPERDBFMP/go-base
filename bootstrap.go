@@ -4,9 +4,8 @@ import (
 	"context"
 	"fmt"
 	"go-base/config"
-	"go-base/db"
 	"go-base/glog"
-	"go-base/redis"
+	"go-base/listener"
 	"os"
 	"os/signal"
 	"syscall"
@@ -14,25 +13,18 @@ import (
 )
 
 func Bootstrap(ctx context.Context, configPath string) {
-	//serviceWg := &sync.WaitGroup{}
 	// 初始化优雅停机信号通道
 	//stopChan := make(chan struct{})
 	//SIGINT
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL) // 增加SIGKILL捕获
-
 	config.InitConfig(configPath)
 	// Init logger
 	glog.InitLogger()
-	if config.GlobalConf.Redis != nil {
-		redis.InitRedis()
-	}
-	if config.GlobalConf.MySQL != nil {
-		db.InitMysql()
-	}
-
+	listener.PublishApplicationEvent(ctx, &listener.AppConfigLoadedEvent{
+		Time: time.Now(),
+	})
 	//做一些钩子
-
 	//等待接收退出信号
 	sig := <-sigChan
 	glog.Infof(ctx, "收到退出信号:%v,开始优雅停机...", sig)
@@ -51,24 +43,14 @@ func Bootstrap(ctx context.Context, configPath string) {
 			os.Exit(1)
 		}
 	}()
-
-	//关闭web
-
-	// 关闭数据库连接（单独设置超时）
-	dbCtx, dbCancel := context.WithTimeout(ctx, 10*time.Second)
-	defer dbCancel()
-	if err := db.CloseDB(dbCtx); err != nil {
-		glog.Errorf(ctx, "数据库关闭失败:%v", err)
-	}
-
-	// 关闭Redis连接
-	if config.GlobalConf.Redis != nil {
-		redisClient := redis.GetRedis(ctx)
-		if redisClient != nil {
-			redisClient.Close()
-			glog.Info(ctx, "Redis连接已关闭")
-		}
-	}
+	glog.Info(ctx, "开始优雅停机")
+	listener.PublishApplicationEvent(ctx, &listener.AppShutdownEvent{
+		Time: time.Now(),
+	})
+	//todo 关闭web,在web中处理
+	listener.PublishApplicationEvent(ctx, &listener.AppWebServerStoppedEvent{
+		Time: time.Now(),
+	})
 	glog.Info(ctx, "优雅停机流程完成,程序退出")
 	close(done)
 	os.Exit(1)

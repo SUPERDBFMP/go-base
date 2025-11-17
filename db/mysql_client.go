@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"go-base/config"
 	"go-base/glog"
+	"go-base/listener"
 	"go-base/util"
 	"reflect"
 	"strings"
@@ -20,6 +21,11 @@ import (
 
 // GlobalDB 全局数据库实例
 var GlobalDB *gorm.DB
+
+func init() {
+	listener.AddTypedApplicationListener(&AppConfigLoadedEventListener{})
+	listener.AddTypedApplicationListener(&AppShutDownEventListener{})
+}
 
 // InitMysql 初始化数据库
 func InitMysql() {
@@ -204,6 +210,26 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (sql 
 		sql = strings.ReplaceAll(sql, "\n", "")
 		sql = strings.ReplaceAll(sql, "\t", "")
 		glog.Infof(ctx, "%s | rows:%v | elapsed:%dms %s", sql, rows, elapsed.Milliseconds(), slow)
+	}
+}
+
+type AppConfigLoadedEventListener struct{}
+
+func (ace *AppConfigLoadedEventListener) OnApplicationEvent(ctx context.Context, event *listener.AppConfigLoadedEvent) {
+	glog.Infof(ctx, "AppConfigLoadedEvent: %v", event.Time)
+	if config.GlobalConf.MySQL != nil {
+		InitMysql()
+	}
+}
+
+type AppShutDownEventListener struct{}
+
+func (l *AppShutDownEventListener) OnApplicationEvent(ctx context.Context, event *listener.AppShutdownEvent) {
+	// 关闭数据库连接（单独设置超时）
+	dbCtx, dbCancel := context.WithTimeout(ctx, 10*time.Second)
+	defer dbCancel()
+	if err := CloseDB(dbCtx); err != nil {
+		glog.Errorf(ctx, "数据库关闭失败:%v", err)
 	}
 }
 
