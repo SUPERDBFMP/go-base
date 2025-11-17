@@ -72,7 +72,7 @@ type RedisConfig struct {
 type GlobalConfig struct {
 	NaCos  *NaCosConfig  `yaml:"nacos"`
 	Logger *LoggerConfig `yaml:"logger"`
-	MySQL  *MySqlConfig  `yaml:"mySql"`
+	MySQL  *MySqlConfig  `yaml:"mysql"`
 	Redis  *RedisConfig  `yaml:"redis"`
 }
 
@@ -120,10 +120,10 @@ func InitConfig(localConfigPath string) {
 		if err != nil {
 			panic(fmt.Sprintf("初始化Nacos客户端错误: %s", err))
 		}
+		loadLoggerConfig()
+		loadMysqlConfig()
+		loadRedisConfig()
 	}
-	loadLoggerConfig()
-	loadMysqlConfig()
-	loadRedisConfig()
 }
 
 // 初始化NaCos
@@ -232,4 +232,20 @@ func loadRedisConfig() {
 		panic(fmt.Sprintf("Parse yaml config[%s] from Nacos err: %v", content, err))
 	}
 	WithRedisConfig(&config)
+}
+
+// ChangeHandler 配置变更处理器函数
+type ChangeHandler func(data string)
+
+// RegisterConfigChangeHandler 注册配置变更监听
+func RegisterConfigChangeHandler(dataId, group string, handler ChangeHandler) {
+	if err := NaCosClient.ListenConfig(
+		vo.ConfigParam{
+			DataId:   dataId,
+			Group:    group,
+			OnChange: func(namespace, group, dataId, data string) { handler(data) },
+		},
+	); err != nil {
+		panic("register nacos config change listener failed, error: " + err.Error())
+	}
 }

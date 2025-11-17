@@ -1,8 +1,8 @@
-nacos:
-  server-addr: 192.168.3.2:8848
-  user-name: base
-  password: base
-  namespace: base
+#nacos:
+#  server-addr: 192.168.3.2:8848
+#  user-name: base
+#  password: base
+#  namespace: base
 logger:
   level: 5
   filename: base.log
@@ -19,4 +19,9 @@ mysql:
   max-idle: 10
   max-conn: 20
   max-life: 120
-
+redis:
+  server-address: localhost:6379
+  password: 123456
+  db: 1
+  pool-size: 2
+  min-idle-cones: 1

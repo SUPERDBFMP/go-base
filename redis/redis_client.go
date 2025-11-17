@@ -5,10 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"go-base/config"
+	"go-base/glog"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
+	"github.com/redis/go-redis/v9/maintnotifications"
 )
 
 // Client Redis客户端结构体
@@ -44,6 +46,13 @@ func InitRedis() {
 			DB:           redisConf.DB,
 			PoolSize:     redisConf.PoolSize,
 			MinIdleConns: redisConf.MinIdleCones,
+			//DisableIdentity: true,
+			//redis集群维护迁移通知
+			MaintNotificationsConfig: &maintnotifications.Config{
+				Mode: maintnotifications.ModeDisabled,
+				//EndpointType:   maintnotifications.EndpointTypeAuto,
+				//RelaxedTimeout: 15 * time.Second,
+			},
 		},
 	)
 
@@ -52,12 +61,12 @@ func InitRedis() {
 	defer cancel()
 	_, err := client.Ping(ctx).Result()
 	if err != nil {
-		//rlog.Errorf(ctx, "无法连接到Redis: %v", err)
+		glog.Errorf(ctx, "无法连接到Redis: %v", err)
 		panic("Can't connection redis server")
 	}
 
 	originRedisClient = client
-	//rlog.Infof(ctx, "Redis connected successfully.")
+	glog.Infof(ctx, "Redis connected successfully.")
 }
 
 // GetRedis 获取Redis客户端
@@ -264,7 +273,7 @@ func (l *DistributedLock) startRenewal() {
 			case <-l.ticker.C:
 				// 定时续期
 				if err := l.renew(context.Background()); err != nil {
-					//rlog.Errorf(context.Background(), "自动续期失败: %v", err)
+					glog.Errorf(context.Background(), "自动续期失败: %v", err)
 					// 续期失败时可触发业务降级逻辑（如中断任务）
 				}
 			case <-l.stopChan:
