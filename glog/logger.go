@@ -31,6 +31,16 @@ var appName string
 
 var podName string
 
+var fieldOrder = []string{"path", "method", "ip", "status", "cost"}
+
+var fieldOrderMap = map[string]bool{
+	"path":   true,
+	"method": true,
+	"ip":     true,
+	"status": true,
+	"cost":   true,
+}
+
 // DailySizeRotator 结合每日切换和大小切割的日志轮转器
 type DailySizeRotator struct {
 	mu          sync.Mutex          // 并发安全锁
@@ -151,7 +161,7 @@ func (d *DailySizeRotator) Close() error {
 }
 
 // InitLogger 初始化日志配置（支持每日+大小轮转）
-func InitLogger() {
+func InitLogger(ctx context.Context) {
 	logMutex.Lock()
 	defer logMutex.Unlock() // 确保释放锁
 	params := config.GlobalConf.Logger
@@ -199,20 +209,20 @@ func InitLogger() {
 	}
 	logrus.SetLevel(level)
 
-	Info(context.Background(), "init logrus success（支持每日+大小轮转）")
+	Info(ctx, "init logrus success（支持每日+大小轮转）")
 
 	if config.GlobalConf.NaCos != nil {
 		// 注册配置变更处理器
 		config.RegisterConfigChangeHandler(
 			config.LoggerDataId, config.DefaultGroup, func(data string) {
 				Infof(
-					context.Background(), "DataId:%s,Group:%s 配置发生变更为:%s", config.LoggerDataId, config.DefaultGroup, data,
+					ctx, "DataId:%s,Group:%s 配置发生变更为:%s", config.LoggerDataId, config.DefaultGroup, data,
 				)
 				if err := yaml.Unmarshal([]byte(data), &config.GlobalConf.Logger); err != nil {
 					logrus.Warnf("Parse yaml config[%s] from Nacos err: %v,ignore", data, err)
 					return
 				}
-				InitLogger() // 重新初始化日志
+				InitLogger(ctx) // 重新初始化日志
 			},
 		)
 	}
@@ -226,7 +236,6 @@ func (f *SimpleTextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	timestamp := entry.Time.Format("2006-01-02 15:04:05.000")
 	level := strings.ToUpper(entry.Level.String())
 	message := entry.Message
-
 	// 获取traceId
 	traceId := ""
 	if tid, ok := entry.Data[trace.TraceIdKey].(string); ok {
@@ -250,9 +259,23 @@ func (f *SimpleTextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		parts = append(parts, "-")
 	}
 	parts = append(parts, message)
+
+	// 按预定顺序添加字段
+	for _, key := range fieldOrder {
+		if value, exists := entry.Data[key]; exists {
+			parts = append(parts, fmt.Sprintf("%v", value))
+		}
+	}
+	//for _, key := range fieldOrder {
+	//	delete(entry.Data,key )
+	//}
+
 	for k, v := range entry.Data {
 		if k != trace.TraceIdKey {
-			parts = append(parts, fmt.Sprintf("%v", v))
+			_, ok := fieldOrderMap[k]
+			if !ok {
+				parts = append(parts, fmt.Sprintf("%v", v))
+			}
 		}
 	}
 

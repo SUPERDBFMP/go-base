@@ -6,13 +6,16 @@ import (
 	"go-base/config"
 	"go-base/glog"
 	"go-base/listener"
+	"go-base/trace"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 )
 
-func Bootstrap(ctx context.Context, configPath string) {
+func Bootstrap(ctx context.Context, configPath string, options ...config.BootOption) {
+	ctx = context.WithValue(ctx, trace.TraceIdKey, "main")
+	bootstrapConfig := &config.BootstrapConfig{}
 	// 初始化优雅停机信号通道
 	//stopChan := make(chan struct{})
 	//SIGINT
@@ -20,9 +23,13 @@ func Bootstrap(ctx context.Context, configPath string) {
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL) // 增加SIGKILL捕获
 	config.InitConfig(configPath)
 	// Init logger
-	glog.InitLogger()
+	glog.InitLogger(ctx)
+	for _, option := range options {
+		option(bootstrapConfig)
+	}
 	listener.PublishApplicationEvent(ctx, &listener.AppConfigLoadedEvent{
-		Time: time.Now(),
+		Time:            time.Now(),
+		BootstrapConfig: bootstrapConfig,
 	})
 	//做一些钩子
 	//等待接收退出信号

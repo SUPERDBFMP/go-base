@@ -14,6 +14,7 @@ type ApplicationEvent interface {
 // TypedApplicationListener 泛型监听器接口
 type TypedApplicationListener[T ApplicationEvent] interface {
 	OnApplicationEvent(ctx context.Context, event T)
+	GetOrder() int
 }
 
 // genericListenerWrapper 泛型监听器包装器
@@ -25,4 +26,8 @@ func (w *genericListenerWrapper[T]) OnApplicationEvent(ctx context.Context, even
 	if typedEvent, ok := event.(T); ok {
 		w.listener.OnApplicationEvent(ctx, typedEvent)
 	}
+}
+
+func (w *genericListenerWrapper[T]) GetOrder() int {
+	return w.listener.GetOrder()
 }

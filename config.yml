@@ -3,6 +3,9 @@
 #  user-name: base
 #  password: base
 #  namespace: base
+web-server:
+  port: 8080
+  context-path: /base
 logger:
   level: 5
   filename: base.log

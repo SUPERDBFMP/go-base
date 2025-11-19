@@ -28,7 +28,7 @@ func init() {
 }
 
 // InitMysql 初始化数据库
-func InitMysql() {
+func InitMysql(ctx context.Context) {
 	mysqlConfig := config.GlobalConf.MySQL
 	dsn := fmt.Sprintf(
 		"%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
@@ -63,7 +63,7 @@ func InitMysql() {
 		panic("failed to setup global ID hook: " + err.Error())
 	}
 	gplus.Init(db)
-	glog.Infof(context.Background(), "Mysql connected successfully!")
+	glog.Infof(ctx, "Mysql connected successfully!")
 }
 
 // setupGlobalIDHook 注册全局ID生成钩子
@@ -215,14 +215,22 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (sql 
 
 type AppConfigLoadedEventListener struct{}
 
+func (ace *AppConfigLoadedEventListener) GetOrder() int {
+	return 0
+}
+
 func (ace *AppConfigLoadedEventListener) OnApplicationEvent(ctx context.Context, event *listener.AppConfigLoadedEvent) {
 	glog.Infof(ctx, "AppConfigLoadedEvent: %v", event.Time)
 	if config.GlobalConf.MySQL != nil {
-		InitMysql()
+		InitMysql(ctx)
 	}
 }
 
 type AppShutDownEventListener struct{}
+
+func (l *AppShutDownEventListener) GetOrder() int {
+	return 2
+}
 
 func (l *AppShutDownEventListener) OnApplicationEvent(ctx context.Context, event *listener.AppShutdownEvent) {
 	// 关闭数据库连接（单独设置超时）

@@ -30,7 +30,7 @@ func init() {
 }
 
 // InitRedis 创建新的Redis客户端
-func InitRedis() {
+func InitRedis(ctx context.Context) {
 	redisConf := config.GlobalConf.Redis
 	if redisConf == nil {
 		return
@@ -63,7 +63,7 @@ func InitRedis() {
 	)
 
 	// 测试连接
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	_, err := client.Ping(ctx).Result()
 	if err != nil {
@@ -77,14 +77,22 @@ func InitRedis() {
 
 type AppConfigLoadedEventListener struct{}
 
+func (ace *AppConfigLoadedEventListener) GetOrder() int {
+	return 1
+}
+
 func (ace *AppConfigLoadedEventListener) OnApplicationEvent(ctx context.Context, event *listener.AppConfigLoadedEvent) {
 	glog.Infof(ctx, "AppConfigLoadedEvent: %v", event.Time)
 	if config.GlobalConf.Redis != nil {
-		InitRedis()
+		InitRedis(ctx)
 	}
 }
 
 type AppShutDownEventListener struct{}
+
+func (l *AppShutDownEventListener) GetOrder() int {
+	return 1
+}
 
 func (l *AppShutDownEventListener) OnApplicationEvent(ctx context.Context, event *listener.AppShutdownEvent) {
 	// 关闭Redis连接
@@ -174,12 +182,12 @@ type DistributedLock struct {
 
 // NewDistributedLock 创建分布式锁实例
 func NewDistributedLock(key string, expiration time.Duration) *DistributedLock {
-	if originRedisClient == nil {
-		InitRedis()
-		if originRedisClient == nil {
-			panic("Please init redis client")
-		}
-	}
+	//if originRedisClient == nil {
+	//	InitRedis()
+	//	if originRedisClient == nil {
+	//		panic("Please init redis client")
+	//	}
+	//}
 	return &DistributedLock{
 		rdb:        originRedisClient,
 		key:        key,

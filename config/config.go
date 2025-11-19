@@ -69,11 +69,17 @@ type RedisConfig struct {
 	MinIdleCones  int    `yaml:"min-idle-cones"` // Redis最小空闲连接数
 }
 
+type WebServerConfig struct {
+	Port        string `yaml:"port"`
+	ContextPath string `yaml:"context-path"`
+}
+
 type GlobalConfig struct {
-	NaCos  *NaCosConfig  `yaml:"nacos"`
-	Logger *LoggerConfig `yaml:"logger"`
-	MySQL  *MySqlConfig  `yaml:"mysql"`
-	Redis  *RedisConfig  `yaml:"redis"`
+	NaCos     *NaCosConfig     `yaml:"nacos"`
+	WebServer *WebServerConfig `yaml:"web-server"`
+	Logger    *LoggerConfig    `yaml:"logger"`
+	MySQL     *MySqlConfig     `yaml:"mysql"`
+	Redis     *RedisConfig     `yaml:"redis"`
 }
 
 type Option func(*GlobalConfig)

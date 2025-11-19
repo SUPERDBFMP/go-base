@@ -4,6 +4,7 @@ import (
 	"context"
 	"go-base/glog"
 	"reflect"
+	"sort"
 	"sync"
 )
 
@@ -33,6 +34,11 @@ func (ep *EventPublisher) addListener(listener TypedApplicationListener[Applicat
 	ep.mutex.Lock()
 	defer ep.mutex.Unlock()
 	ep.listeners = append(ep.listeners, listener)
+	sort.Slice(
+		ep.listeners, func(i, j int) bool {
+			return ep.listeners[i].GetOrder() < ep.listeners[j].GetOrder()
+		},
+	)
 }
 
 // AddTypedListener 添加泛型监听器（包级函数）
