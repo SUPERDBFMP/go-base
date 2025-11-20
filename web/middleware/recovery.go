@@ -1,9 +1,10 @@
 package middleware
 
 import (
-	"go-base/glog"
 	"net/http"
 	"runtime/debug"
+
+	"github.com/SUPERDBFMP/go-base/glog"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"

@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"go-base/config"
-	"go-base/glog"
-	"go-base/trace"
 	"io"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/SUPERDBFMP/go-base/config"
+	"github.com/SUPERDBFMP/go-base/glog"
+	"github.com/SUPERDBFMP/go-base/trace"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"

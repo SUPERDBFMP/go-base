@@ -1,9 +1,10 @@
 package metric
 
 import (
-	"go-base/prometheus"
 	"strconv"
 	"time"
+
+	"github.com/SUPERDBFMP/go-base/prometheus"
 
 	"github.com/gin-gonic/gin"
 )

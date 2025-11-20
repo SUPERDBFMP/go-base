@@ -3,14 +3,15 @@ package go_base
 import (
 	"context"
 	"fmt"
-	"go-base/config"
-	"go-base/glog"
-	"go-base/listener"
-	"go-base/trace"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/SUPERDBFMP/go-base/config"
+	"github.com/SUPERDBFMP/go-base/glog"
+	"github.com/SUPERDBFMP/go-base/listener"
+	"github.com/SUPERDBFMP/go-base/trace"
 )
 
 func Bootstrap(ctx context.Context, configPath string, options ...config.BootOption) {

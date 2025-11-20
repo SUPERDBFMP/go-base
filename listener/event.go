@@ -1,8 +1,9 @@
 package listener
 
 import (
-	"go-base/config"
 	"time"
+
+	"github.com/SUPERDBFMP/go-base/config"
 )
 
 // AppConfigLoadedEvent 启动时加载配置完成

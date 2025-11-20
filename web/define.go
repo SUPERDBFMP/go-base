@@ -3,10 +3,11 @@ package web
 import (
 	"errors"
 	"fmt"
-	"go-base/errs"
-	"go-base/glog"
 	"net/http"
 	"reflect"
+
+	"github.com/SUPERDBFMP/go-base/errs"
+	"github.com/SUPERDBFMP/go-base/glog"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"

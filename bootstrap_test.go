@@ -2,12 +2,13 @@ package go_base
 
 import (
 	"context"
-	"go-base/config"
-	_ "go-base/db"
-	_ "go-base/redis"
-	_ "go-base/web"
 	"net/http"
 	"testing"
+
+	"github.com/SUPERDBFMP/go-base/config"
+	_ "github.com/SUPERDBFMP/go-base/db"
+	_ "github.com/SUPERDBFMP/go-base/redis"
+	_ "github.com/SUPERDBFMP/go-base/web"
 
 	"github.com/gin-gonic/gin"
 )
