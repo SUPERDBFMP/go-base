@@ -1,4 +1,4 @@
-module go-base
+module github.com/SUPERDBFMP/go-base
 
 go 1.24.10
 
