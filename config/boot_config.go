@@ -1,6 +1,9 @@
 package config
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
+)
 
 type BootOption func(*BootstrapConfig)
 
@@ -16,9 +19,16 @@ func WithWebMiddlewares(hf []gin.HandlerFunc) BootOption {
 	}
 }
 
+func WithWebValidators(validators map[string]validator.Func) BootOption {
+	return func(bc *BootstrapConfig) {
+		bc.WebValidators = validators
+	}
+}
+
 type BootstrapConfig struct {
 	WebApi         []WebGroup
 	WebMiddlewares []gin.HandlerFunc
+	WebValidators  map[string]validator.Func
 }
 
 type WebGroup struct {

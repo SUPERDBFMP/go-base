@@ -207,7 +207,7 @@ func (l *DistributedLock) Lock(ctx context.Context) (bool, error) {
 	// 获取结果（是否成功获取锁）
 	acquired, err := boolCmd.Result()
 	if err != nil {
-		//return false, fmt.Errorf("获取锁失败: %w", err)
+		//return false, fmt.Errorf("获取锁失败: %w", errs)
 		retryCount++
 	}
 

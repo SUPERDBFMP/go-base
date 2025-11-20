@@ -8,11 +8,13 @@ import (
 	"go-base/glog"
 	"go-base/listener"
 	"go-base/metric"
+	"go-base/util"
 	"go-base/web/middleware"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -35,7 +37,7 @@ func (ace *AppConfigLoadedEventListener) GetOrder() int {
 func (ace *AppConfigLoadedEventListener) OnApplicationEvent(ctx context.Context, event *listener.AppConfigLoadedEvent) {
 	glog.Infof(ctx, "AppConfigLoadedEvent: %v", event.Time)
 	if config.GlobalConf.WebServer != nil && event.BootstrapConfig != nil {
-		InitWebServer(ctx, event.BootstrapConfig.WebApi, event.BootstrapConfig.WebMiddlewares...)
+		InitWebServer(ctx, event.BootstrapConfig.WebApi, event.BootstrapConfig.WebValidators, event.BootstrapConfig.WebMiddlewares...)
 	}
 }
 
@@ -69,7 +71,7 @@ func CreateGinServer(contextPath string) *gin.Engine {
 }
 
 // InitWebServer 启动Web服务
-func InitWebServer(ctx context.Context, webGroups []config.WebGroup, webMiddlewares ...gin.HandlerFunc) {
+func InitWebServer(ctx context.Context, webGroups []config.WebGroup, validatorMap map[string]validator.Func, webMiddlewares ...gin.HandlerFunc) {
 	var contextPath = ""
 	if config.GlobalConf.WebServer.ContextPath != "" {
 		contextPath = config.GlobalConf.WebServer.ContextPath
@@ -91,12 +93,13 @@ func InitWebServer(ctx context.Context, webGroups []config.WebGroup, webMiddlewa
 		Addr:    port,
 		Handler: GinWebRouter,
 	}
+	util.InitValidator(validatorMap)
 
 	// 启动HTTP服务
 	go func() {
 		glog.Infof(ctx, "Web服务启动,监听端口:%v", config.GlobalConf.WebServer.Port)
 		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			glog.Error(ctx, "Start web http server failed,err:"+err.Error())
+			glog.Error(ctx, "Start web http server failed,errs:"+err.Error())
 		}
 	}()
 }

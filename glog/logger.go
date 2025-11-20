@@ -219,7 +219,7 @@ func InitLogger(ctx context.Context) {
 					ctx, "DataId:%s,Group:%s 配置发生变更为:%s", config.LoggerDataId, config.DefaultGroup, data,
 				)
 				if err := yaml.Unmarshal([]byte(data), &config.GlobalConf.Logger); err != nil {
-					logrus.Warnf("Parse yaml config[%s] from Nacos err: %v,ignore", data, err)
+					logrus.Warnf("Parse yaml config[%s] from Nacos errs: %v,ignore", data, err)
 					return
 				}
 				InitLogger(ctx) // 重新初始化日志

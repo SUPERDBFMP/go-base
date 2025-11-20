@@ -106,11 +106,11 @@ func LoggerMiddleware() gin.HandlerFunc {
 			responseBodyStr = string(responseBody)
 			//} else if contentEncoding == "gzip" && len(responseBody) > 0 {
 			//	// 如果是GZIP压缩内容，尝试解压
-			//	reader, err := gzip.NewReader(bytes.NewReader(responseBody))
-			//	if err == nil {
+			//	reader, errs := gzip.NewReader(bytes.NewReader(responseBody))
+			//	if errs == nil {
 			//		defer reader.Close()
-			//		decompressed, err := io.ReadAll(reader)
-			//		if err == nil {
+			//		decompressed, errs := io.ReadAll(reader)
+			//		if errs == nil {
 			//			responseBodyStr = string(decompressed)
 			//		} else {
 			//			responseBodyStr = "[GZIP压缩内容，解压失败]"

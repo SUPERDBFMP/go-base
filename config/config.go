@@ -113,13 +113,13 @@ func InitConfig(localConfigPath string) {
 	}
 	fileByte, err := os.ReadFile(localConfigPath)
 	if err != nil {
-		_ = fmt.Errorf("read config file path:[%s],err,%v", localConfigPath, err)
+		_ = fmt.Errorf("read config file path:[%s],errs,%v", localConfigPath, err)
 		panic(err)
 	}
 	GlobalConf = new(GlobalConfig)
 	err = yaml.Unmarshal(fileByte, GlobalConf)
 	if err != nil {
-		//logrus.Warnf("Parse yaml config[%s] from Nacos err: %v,use default config", content, err)
+		//logrus.Warnf("Parse yaml config[%s] from Nacos errs: %v,use default config", content, errs)
 	}
 	if GlobalConf.NaCos != nil {
 		err = initNaCos(GlobalConf.NaCos)
@@ -188,7 +188,7 @@ func loadLoggerConfig() {
 		},
 	)
 	if err != nil {
-		//logrus.Warnf("Fetch config from Nacos with data id[%s] err:%v,use default config", LoggerDataId, err)
+		//logrus.Warnf("Fetch config from Nacos with data id[%s] errs:%v,use default config", LoggerDataId, errs)
 		WithLoggerConfig(defaultLoggerParam)
 		return
 	}
@@ -199,7 +199,7 @@ func loadLoggerConfig() {
 	}
 	var config LoggerConfig
 	if err = yaml.Unmarshal([]byte(content), &config); err != nil {
-		//logrus.Warnf("Parse yaml config[%s] from Nacos err: %v,use default config", content, err)
+		//logrus.Warnf("Parse yaml config[%s] from Nacos errs: %v,use default config", content, errs)
 		WithLoggerConfig(&config)
 	}
 }
@@ -208,7 +208,7 @@ func loadLoggerConfig() {
 func loadMysqlConfig() {
 	content, err := NaCosClient.GetConfig(vo.ConfigParam{DataId: MySqlDataId, Group: DefaultGroup})
 	if err != nil {
-		panic(fmt.Sprintf("Fetch config from Nacos with data id[%s]err:%s", MySqlDataId, err))
+		panic(fmt.Sprintf("Fetch config from Nacos with data id[%s]errs:%s", MySqlDataId, err))
 	}
 	if content == "" {
 		//logrus.Warnf("Fetch config from Nacos with data id[%s] is blank", MySqlDataId)
@@ -217,7 +217,7 @@ func loadMysqlConfig() {
 
 	var config MySqlConfig
 	if err = yaml.Unmarshal([]byte(content), &config); err != nil {
-		panic(fmt.Sprintf("Parse yaml config[%s] from Nacos err: %v", content, err))
+		panic(fmt.Sprintf("Parse yaml config[%s] from Nacos errs: %v", content, err))
 	}
 	WithMySqlConfig(&config)
 }
@@ -226,7 +226,7 @@ func loadMysqlConfig() {
 func loadRedisConfig() {
 	content, err := NaCosClient.GetConfig(vo.ConfigParam{DataId: RedisDataId, Group: DefaultGroup})
 	if err != nil {
-		panic(fmt.Sprintf("Fetch config from Nacos with data id[%s]err:%s", RedisDataId, err))
+		panic(fmt.Sprintf("Fetch config from Nacos with data id[%s]errs:%s", RedisDataId, err))
 	}
 	if content == "" {
 		//logrus.Warnf("Fetch config from Nacos with data id[%s] is blank", MySqlDataId)
@@ -235,7 +235,7 @@ func loadRedisConfig() {
 
 	var config RedisConfig
 	if err = yaml.Unmarshal([]byte(content), &config); err != nil {
-		panic(fmt.Sprintf("Parse yaml config[%s] from Nacos err: %v", content, err))
+		panic(fmt.Sprintf("Parse yaml config[%s] from Nacos errs: %v", content, err))
 	}
 	WithRedisConfig(&config)
 }
