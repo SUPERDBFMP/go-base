@@ -57,16 +57,25 @@ func LoggerMiddleware() gin.HandlerFunc {
 			strings.Contains(contentType, "x-www-form-urlencoded") ||
 			strings.Contains(contentType, "form-data") &&
 				c.Request.ContentLength < 1*1024*1024 { // 1MB
-			copy := c.Copy()
-			// 读取复制的请求Body
-			body, err := io.ReadAll(copy.Request.Body)
+			//copy := c.Copy()
+			//// 读取复制的请求Body
+			//body, err := io.ReadAll(copy.Request.Body)
+			//if err != nil {
+			//	reqBodyStr = "读取Body失败"
+			//	glog.Errorf(newCtx, "读取Body失败: %v", err)
+			//} else {
+			//	reqBodyStr = string(body)
+			//}
+			//copy.Request.Body.Close()
+
+			body, err := c.GetRawData()
 			if err != nil {
 				reqBodyStr = "读取Body失败"
 				glog.Errorf(newCtx, "读取Body失败: %v", err)
-			} else {
-				reqBodyStr = string(body)
 			}
-			copy.Request.Body.Close()
+			// 重新设置请求体供后续使用
+			c.Request.Body = io.NopCloser(bytes.NewReader(body))
+			reqBodyStr = string(body)
 		} else {
 			//尝试获取query
 			reqBodyStr = c.Request.URL.Query().Encode()

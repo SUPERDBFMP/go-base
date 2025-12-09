@@ -3,7 +3,7 @@ module github.com/SUPERDBFMP/go-base
 go 1.24.10
 
 require (
-	github.com/SUPERDBFMP/gorm-plus-enhanced v0.1.8
+	github.com/SUPERDBFMP/gorm-plus-enhanced v0.1.9
 	github.com/gin-gonic/gin v1.11.0
 	github.com/go-playground/validator/v10 v10.27.0
 	github.com/google/uuid v1.6.0
