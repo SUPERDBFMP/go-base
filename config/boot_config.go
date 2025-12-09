@@ -25,10 +25,22 @@ func WithWebValidators(validators map[string]validator.Func) BootOption {
 	}
 }
 
+func WithCustomerConfigs(name string, configs interface{}) BootOption {
+	return func(bc *BootstrapConfig) {
+		if bc.CustomerConfigs == nil {
+			bc.CustomerConfigs = make(map[string]interface{})
+			bc.CustomerConfigs[name] = configs
+		} else {
+			bc.CustomerConfigs[name] = configs
+		}
+	}
+}
+
 type BootstrapConfig struct {
-	WebApi         []WebGroup
-	WebMiddlewares []gin.HandlerFunc
-	WebValidators  map[string]validator.Func
+	WebApi          []WebGroup
+	WebMiddlewares  []gin.HandlerFunc
+	WebValidators   map[string]validator.Func
+	CustomerConfigs map[string]interface{}
 }
 
 type WebGroup struct {

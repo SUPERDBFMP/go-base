@@ -5,8 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/SUPERDBFMP/go-base/config"
-	"github.com/SUPERDBFMP/go-base/trace"
 	"io"
 	"os"
 	"path/filepath"
@@ -15,6 +13,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/SUPERDBFMP/go-base/config"
+	"github.com/SUPERDBFMP/go-base/trace"
 
 	"github.com/sirupsen/logrus"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -202,7 +203,7 @@ func InitLogger(ctx context.Context) {
 	)
 
 	// 设置日志级别
-	level := logrus.Level(params.Level)
+	level := logrus.Level(GetLogLevel(params.Level))
 	if level < logrus.PanicLevel || level > logrus.TraceLevel {
 		logrus.Warnf("无效的日志级别: %d,使用默认级别 InfoLevel", params.Level)
 		level = logrus.InfoLevel
@@ -226,6 +227,31 @@ func InitLogger(ctx context.Context) {
 			},
 		)
 	}
+}
+
+func GetLogLevel(level string) int32 {
+	if level == "INFO" || level == "info" {
+		return int32(logrus.InfoLevel)
+	}
+	if level == "DEBUG" || level == "debug" {
+		return int32(logrus.DebugLevel)
+	}
+	if level == "TRACE" || level == "trace" {
+		return int32(logrus.TraceLevel)
+	}
+	if level == "WARN" || level == "warn" {
+		return int32(logrus.WarnLevel)
+	}
+	if level == "ERROR" || level == "error" {
+		return int32(logrus.ErrorLevel)
+	}
+	if level == "FATAL" || level == "fatal" {
+		return int32(logrus.FatalLevel)
+	}
+	if level == "PANIC" || level == "panic" {
+		return int32(logrus.PanicLevel)
+	}
+	return int32(logrus.InfoLevel)
 }
 
 // SimpleTextFormatter 简单文本格式化器（|分隔）

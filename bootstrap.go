@@ -22,12 +22,12 @@ func Bootstrap(ctx context.Context, configPath string, options ...config.BootOpt
 	//SIGINT
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL) // 增加SIGKILL捕获
-	config.InitConfig(configPath)
-	// Init logger
-	glog.InitLogger(ctx)
 	for _, option := range options {
 		option(bootstrapConfig)
 	}
+	config.InitConfig(ctx, configPath, bootstrapConfig)
+	// Init logger
+	glog.InitLogger(ctx)
 	listener.PublishApplicationEvent(ctx, &listener.AppConfigLoadedEvent{
 		Time:            time.Now(),
 		BootstrapConfig: bootstrapConfig,

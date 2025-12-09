@@ -13,7 +13,7 @@ import (
 	"github.com/SUPERDBFMP/go-base/listener"
 	"github.com/SUPERDBFMP/go-base/util"
 
-	"github.com/acmestack/gorm-plus/gplus"
+	"github.com/SUPERDBFMP/gorm-plus-enhanced/gplus"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -38,6 +38,7 @@ func InitMysql(ctx context.Context) {
 
 	gormLogger := newGormLogger()
 	gormLogger.SlowThreshold = 3000 * time.Millisecond
+	gormLogger.LogLevel = logger.LogLevel(glog.GetLogLevel(config.GlobalConf.Logger.Level))
 
 	db, err := gorm.Open(
 		mysql.Open(dsn), &gorm.Config{
@@ -59,6 +60,7 @@ func InitMysql(ctx context.Context) {
 	sqlDB.SetMaxIdleConns(mysqlConfig.MaxIdle)                                 // 最大空闲连接数
 	sqlDB.SetMaxOpenConns(mysqlConfig.MaxConn)                                 // 最大打开连接数
 	sqlDB.SetConnMaxLifetime(time.Duration(mysqlConfig.MaxLife) * time.Minute) // 连接最大生命周期
+	sqlDB.SetConnMaxIdleTime(time.Duration(mysqlConfig.MaxIdleTime) * time.Minute)
 	GlobalDB = db
 	if err := setupGlobalIDHook(db); err != nil {
 		panic("failed to setup global ID hook: " + err.Error())
@@ -155,6 +157,7 @@ type GormLogger struct {
 // newGormLogger 创建一个新的 GORM-Logrus 适配器
 func newGormLogger() *GormLogger {
 	return &GormLogger{
+		LogLevel:      logger.Info,
 		SlowThreshold: 200 * time.Millisecond, // 默认慢查询阈值
 	}
 }

@@ -68,7 +68,14 @@ func LoggerMiddleware() gin.HandlerFunc {
 			}
 			copy.Request.Body.Close()
 		} else {
-			reqBodyStr = fmt.Sprintf("[二进制内容，大小: %d 字节]", c.Request.ContentLength)
+			//尝试获取query
+			reqBodyStr = c.Request.URL.Query().Encode()
+			if reqBodyStr != "" {
+				reqBodyStr = fmt.Sprintf("[query:%s body:二进制内容，大小: %d 字节]", reqBodyStr, c.Request.ContentLength)
+			} else {
+				reqBodyStr = fmt.Sprintf("[二进制内容，大小: %d 字节]", c.Request.ContentLength)
+			}
+
 		}
 
 		glog.InfofWithFields(newCtx, reqFields, "req:%s", reqBodyStr)

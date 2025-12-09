@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -40,7 +41,7 @@ type NaCosConfig struct {
 
 // LoggerConfig 日志配置结构体
 type LoggerConfig struct {
-	Level      uint32 `yaml:"level"`       // 日志级别
+	Level      string `yaml:"level"`       // 日志级别
 	Filename   string `yaml:"filename"`    // 日志文件名
 	MaxSize    int    `yaml:"max-size"`    // 日志文件最大大小
 	MaxAge     int    `yaml:"max-age"`     // 日志文件最大保存时间
@@ -50,14 +51,15 @@ type LoggerConfig struct {
 
 // MySqlConfig mysql配置
 type MySqlConfig struct {
-	Host     string `yaml:"host"`
-	Port     int    `yaml:"port"`
-	UserName string `yaml:"user-name"`
-	Password string `yaml:"password"`
-	DbName   string `yaml:"db-name"`
-	MaxIdle  int    `yaml:"max-idle"` //最大空闲连接
-	MaxConn  int    `yaml:"max-conn"` //最大连接数
-	MaxLife  int    `yaml:"max-life"` //连接生命周期，单位为分钟
+	Host        string `yaml:"host"`
+	Port        int    `yaml:"port"`
+	UserName    string `yaml:"user-name"`
+	Password    string `yaml:"password"`
+	DbName      string `yaml:"db-name"`
+	MaxIdle     int    `yaml:"max-idle"`      //最大空闲连接
+	MaxConn     int    `yaml:"max-conn"`      //最大连接数
+	MaxLife     int    `yaml:"max-life"`      //连接生命周期，单位为分钟
+	MaxIdleTime int    `yaml:"max-idle-time"` //连接空闲时间，单位为分钟
 }
 
 // RedisConfig Redis配置结构体
@@ -80,6 +82,11 @@ type GlobalConfig struct {
 	Logger    *LoggerConfig    `yaml:"logger"`
 	MySQL     *MySqlConfig     `yaml:"mysql"`
 	Redis     *RedisConfig     `yaml:"redis"`
+}
+
+type CustomConfig struct {
+	Name         string
+	ConfigStruct *interface{}
 }
 
 type Option func(*GlobalConfig)
@@ -107,7 +114,7 @@ func WithRedisConfig(redis *RedisConfig) Option {
 }
 
 // 初始化配置
-func InitConfig(localConfigPath string) {
+func InitConfig(ctx context.Context, localConfigPath string, bootConfig *BootstrapConfig) {
 	if localConfigPath == "" {
 		localConfigPath = "./config/config.yml"
 	}
@@ -119,7 +126,28 @@ func InitConfig(localConfigPath string) {
 	GlobalConf = new(GlobalConfig)
 	err = yaml.Unmarshal(fileByte, GlobalConf)
 	if err != nil {
-		//logrus.Warnf("Parse yaml config[%s] from Nacos errs: %v,use default config", content, errs)
+		_ = fmt.Errorf("parse config file path:[%s],errs,%v", localConfigPath, err)
+		panic(err)
+		//glog.Warnf(ctx,"Parse yaml config[%s] from Nacos errs: %v,use default config", content, errs)
+	}
+	//定制配置
+	for name, customConfig := range bootConfig.CustomerConfigs {
+		err = yaml.Unmarshal(fileByte, customConfig)
+		if err != nil {
+			panic(fmt.Sprintf("解析%s配置失败: %s", name, err))
+		}
+		//content, err := NaCosClient.GetConfig(
+		//	vo.ConfigParam{
+		//		DataId: customConfig.Name,
+		//		Group:  DefaultGroup,
+		//	},
+		//)
+		//if err != nil {
+		//	panic(fmt.Sprintf("从Nacos获取%s配置失败: %s", customConfig.Name, err))
+		//}
+		//if content == "" {
+		//	panic(fmt.Sprintf("从Nacos获取%s配置为空", customConfig.Name))
+		//}
 	}
 	if GlobalConf.NaCos != nil {
 		err = initNaCos(GlobalConf.NaCos)
@@ -129,6 +157,9 @@ func InitConfig(localConfigPath string) {
 		loadLoggerConfig()
 		loadMysqlConfig()
 		loadRedisConfig()
+		for name, customConfig := range bootConfig.CustomerConfigs {
+			loadCustomConfig(name, customConfig)
+		}
 	}
 }
 
@@ -172,7 +203,7 @@ var defaultLoggerParam = &LoggerConfig{
 	MaxBackups: 30,
 	MaxAge:     30,
 	Compress:   true,
-	Level:      5,
+	Level:      "INFO",
 }
 
 // 加载日志配置
@@ -201,6 +232,20 @@ func loadLoggerConfig() {
 	if err = yaml.Unmarshal([]byte(content), &config); err != nil {
 		//logrus.Warnf("Parse yaml config[%s] from Nacos errs: %v,use default config", content, errs)
 		WithLoggerConfig(&config)
+	}
+}
+
+func loadCustomConfig(name string, config interface{}) {
+	content, err := NaCosClient.GetConfig(vo.ConfigParam{DataId: name, Group: DefaultGroup})
+	if err != nil {
+		panic(fmt.Sprintf("Fetch config from Nacos with data id[%s]errs:%s", name, err))
+	}
+	if content == "" {
+		//logrus.Warnf
+		return
+	}
+	if err = yaml.Unmarshal([]byte(content), config); err != nil {
+		panic(fmt.Sprintf("Fetch config from Nacos with data id[%s]errs:%s", name, err))
 	}
 }
 
